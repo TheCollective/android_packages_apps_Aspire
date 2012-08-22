@@ -19,7 +19,7 @@
         style="@style/DropTargetButtonContainer"
         android:layout_weight="1">
         <!-- Delete target -->
-        <com.cyanogenmod.trebuchet.DeleteDropTarget
+        <com.collective.aspire.DeleteDropTarget
             style="@style/DropTargetButton"
             android:id="@+id/delete_target_text"
             android:drawableTop="@drawable/remove_target_selector" />
@@ -29,7 +29,7 @@
         style="@style/DropTargetButtonContainer"
         android:layout_weight="1">
         <!-- Info target -->
-        <com.cyanogenmod.trebuchet.InfoDropTarget
+        <com.collective.aspire.InfoDropTarget
             style="@style/DropTargetButton"
             android:id="@+id/info_target_text"
             android:drawableTop="@drawable/info_target_selector" />
