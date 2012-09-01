@@ -9,7 +9,7 @@ import sqlite3
 SCREENS = 5
 COLUMNS = 4
 ROWS = 4
-HOTSEAT_SIZE = 5
+HOTSEAT_SIZE = 7
 CELL_SIZE = 110
 
 DIR = "db_files"

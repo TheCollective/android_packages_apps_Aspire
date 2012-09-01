@@ -30,12 +30,12 @@
     <!-- Middle screen [2] -->
     <appwidget
         launcher:packageName="com.android.deskclock"
-        launcher:className="com.android.alarmclock.AnalogAppWidgetProvider"
+        launcher:className="com.android.deskclock.DigitalAppWidgetProvider"
         launcher:screen="2"
         launcher:x="1"
         launcher:y="0"
         launcher:spanX="2"
-        launcher:spanY="2" />
+        launcher:spanY="1" />
     <favorite
         launcher:packageName="com.android.camera"
         launcher:className="com.android.camera.Camera"
