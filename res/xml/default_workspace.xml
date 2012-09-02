@@ -89,8 +89,8 @@
         launcher:x="4"
         launcher:y="0" />
     <favorite
-        launcher:packageName="com.android.email"
-        launcher:className="com.android.email.Welcome"
+        launcher:packageName="com.collective.personalize"
+        launcher:className="com.collective.personalize.PersonalizeActivity"
         launcher:container="-101"
         launcher:screen="5"
         launcher:x="5"
