@@ -18,7 +18,7 @@
     <!-- Update the db with new hotseat items.  Note that we reference the browser's original
          package name. -->
     <!-- Hotseat (We use the screen as the position of the item in the hotseat) -->
-    <favorite
+<favorite
         launcher:packageName="com.android.contacts"
         launcher:className="com.android.contacts.activities.DialtactsActivity"
         launcher:container="-101"
@@ -36,14 +36,28 @@
         launcher:packageName="com.android.mms"
         launcher:className="com.android.mms.ui.ConversationList"
         launcher:container="-101"
-        launcher:screen="3"
-        launcher:x="3"
+        launcher:screen="2"
+        launcher:x="2"
+        launcher:y="0" />
+    <favorite
+        launcher:packageName="com.android.calendar"
+        launcher:className="com.android.calendar.AllInOneActivity"
+        launcher:container="-101"
+        launcher:screen="4"
+        launcher:x="4"
+        launcher:y="0" />
+    <favorite
+        launcher:packageName="com.android.email"
+        launcher:className="com.android.email.Welcome"
+        launcher:container="-101"
+        launcher:screen="5"
+        launcher:x="5"
         launcher:y="0" />
     <favorite
         launcher:packageName="com.android.browser"
         launcher:className="com.android.browser.BrowserActivity"
         launcher:container="-101"
-        launcher:screen="4"
-        launcher:x="4"
+        launcher:screen="6"
+        launcher:x="6"
         launcher:y="0" />
 </favorites>

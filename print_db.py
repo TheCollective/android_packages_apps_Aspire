@@ -7,8 +7,8 @@ import sys
 import sqlite3
 
 SCREENS = 5
-COLUMNS = 4
-ROWS = 4
+COLUMNS = 6
+ROWS = 5
 HOTSEAT_SIZE = 7
 CELL_SIZE = 110
 
