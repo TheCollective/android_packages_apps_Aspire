@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.collective.aspire.LauncherApplication;
+import com.collective.aspire.R;
 import com.collective.aspire.Workspace;
 import com.collective.aspire.AppsCustomizePagedView;
 

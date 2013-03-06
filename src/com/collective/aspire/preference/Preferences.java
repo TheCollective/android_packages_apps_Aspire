@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 
+import com.collective.aspire.LauncherApplication;
 import com.collective.aspire.R;
 
 public class Preferences extends PreferenceActivity {
