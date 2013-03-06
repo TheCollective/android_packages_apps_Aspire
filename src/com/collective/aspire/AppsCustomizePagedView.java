@@ -236,7 +236,7 @@ class RectCache extends WeakReferenceThreadLocal<Rect> {
  * The Apps/Customize page that displays all the applications, widgets, and shortcuts.
  */
 public class AppsCustomizePagedView extends PagedViewWithDraggableItems implements
-        AllAppsView, View.OnClickListener, View.OnKeyListener, DragSource,
+        View.OnClickListener, View.OnKeyListener, DragSource,
         PagedViewIcon.PressedCallback, PagedViewWidget.ShortPressListener,
         LauncherTransitionable {
     static final String TAG = "AppsCustomizePagedView";
@@ -1848,20 +1848,16 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
     /*
      * AllAppsView implementation
      */
-    @Override
     public void setup(Launcher launcher, DragController dragController) {
         mLauncher = launcher;
         mDragController = dragController;
     }
-    @Override
     public void zoom(float zoom, boolean animate) {
         // TODO-APPS_CUSTOMIZE: Call back to mLauncher.zoomed()
     }
-    @Override
     public boolean isVisible() {
         return (getVisibility() == VISIBLE);
     }
-    @Override
     public boolean isAnimating() {
         return false;
     }
@@ -1913,7 +1909,6 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         }
     }
 
-    @Override
     public void setApps(ArrayList<ApplicationInfo> list) {
         mApps = list;
         if (mSortMode == SortMode.Title) {
@@ -1940,7 +1935,6 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
             }
         }
     }
-    @Override
     public void addApps(ArrayList<ApplicationInfo> list) {
         addAppsWithoutInvalidate(list);
         updatePageCounts();
@@ -1968,13 +1962,12 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
             }
         }
     }
-    @Override
+
     public void removeApps(ArrayList<ApplicationInfo> list) {
         removeAppsWithoutInvalidate(list);
         updatePageCounts();
         invalidateOnDataChange();
     }
-    @Override
     public void updateApps(ArrayList<ApplicationInfo> list) {
         // We remove and re-add the updated applications list because it's properties may have
         // changed (ie. the title), and this will ensure that the items will be in their proper
@@ -1985,7 +1978,6 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         invalidateOnDataChange();
     }
 
-    @Override
     public void reset() {
         // If we have reset, then we should not continue to restore the previous state
         mSaveInstanceStateItemIndex = -1;
@@ -2017,7 +2009,6 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         return (AppsCustomizeTabHost) mLauncher.findViewById(R.id.apps_customize_pane);
     }
 
-    @Override
     public void dumpState() {
         // TODO: Dump information related to current list of Applications, Widgets, etc.
         ApplicationInfo.dumpApplicationInfoList(TAG, "mApps", mApps);
@@ -2042,7 +2033,6 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         }
     }
 
-    @Override
     public void surrender() {
         // TODO: If we are in the middle of any process (ie. for holographic outlines, etc) we
         // should stop this now.

@@ -136,6 +136,7 @@ public class CellLayout extends ViewGroup {
     private ShortcutAndWidgetContainer mShortcutsAndWidgets;
 
     private boolean mIsHotseat = false;
+    private float mHotseatScale = 1f;
 
     public static final int MODE_DRAG_OVER = 0;
     public static final int MODE_ON_DROP = 1;
@@ -160,6 +161,7 @@ public class CellLayout extends ViewGroup {
 
     private final static PorterDuffXfermode sAddBlendMode =
             new PorterDuffXfermode(PorterDuff.Mode.ADD);
+    private final static Paint sPaint = new Paint();
 
     public CellLayout(Context context) {
         this(context, null);
@@ -197,6 +199,7 @@ public class CellLayout extends ViewGroup {
         setAlwaysDrawnWithCacheEnabled(false);
 
         final Resources res = getResources();
+        mHotseatScale = (res.getInteger(R.integer.hotseat_item_scale_percentage) / 100f);
 
         mNormalBackground = res.getDrawable(R.drawable.homescreen_blue_normal_holo);
         mActiveGlowBackground = res.getDrawable(R.drawable.homescreen_blue_strong_holo);
@@ -302,7 +305,19 @@ public class CellLayout extends ViewGroup {
     }
 
     public void enableHardwareLayers() {
-        mShortcutsAndWidgets.enableHardwareLayers();
+        mShortcutsAndWidgets.setLayerType(LAYER_TYPE_HARDWARE, sPaint);
+    }
+
+    public void disableHardwareLayers() {
+        mShortcutsAndWidgets.setLayerType(LAYER_TYPE_NONE, sPaint);
+    }
+
+    public void buildHardwareLayer() {
+        mShortcutsAndWidgets.buildLayer();
+    }
+
+    public float getChildrenScale() {
+        return mIsHotseat ? mHotseatScale : 1.0f;
     }
 
     public void setGridSize(int x, int y) {
@@ -373,6 +388,25 @@ public class CellLayout extends ViewGroup {
             setPivotX(getMeasuredWidth() / 2);
             setPivotY(getMeasuredHeight() / 2);
         }
+    }
+
+    public void scaleRect(Rect r, float scale) {
+        if (scale != 1.0f) {
+            r.left = (int) (r.left * scale + 0.5f);
+            r.top = (int) (r.top * scale + 0.5f);
+            r.right = (int) (r.right * scale + 0.5f);
+            r.bottom = (int) (r.bottom * scale + 0.5f);
+        }
+    }
+
+    Rect temp = new Rect();
+    void scaleRectAboutCenter(Rect in, Rect out, float scale) {
+        int cx = in.centerX();
+        int cy = in.centerY();
+        out.set(in);
+        out.offset(-cx, -cy);
+        scaleRect(out, scale);
+        out.offset(cx, cy);
     }
 
     @Override

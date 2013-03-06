@@ -30,14 +30,14 @@
     <!-- Middle screen [2] -->
     <appwidget
         launcher:packageName="com.android.deskclock"
-        launcher:className="com.android.deskclock.DigitalAppWidgetProvider"
+        launcher:className="com.android.alarmclock.DigitalAppWidgetProvider"
         launcher:screen="2"
         launcher:x="0"
         launcher:y="0"
         launcher:spanX="4"
-        launcher:spanY="1" />
+        launcher:spanY="2" />
     <favorite
-        launcher:packageName="com.android.camera"
+        launcher:packageName="com.android.gallery3d"
         launcher:className="com.android.camera.Camera"
         launcher:screen="2"
         launcher:x="0"
@@ -87,13 +87,6 @@
         launcher:container="-101"
         launcher:screen="4"
         launcher:x="4"
-        launcher:y="0" />
-    <favorite
-        launcher:packageName="com.collective.personalize"
-        launcher:className="com.collective.personalize.PersonalizeActivity"
-        launcher:container="-101"
-        launcher:screen="5"
-        launcher:x="5"
         launcher:y="0" />
     <favorite
         launcher:packageName="com.android.browser"
