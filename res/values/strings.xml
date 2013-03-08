@@ -23,7 +23,7 @@
     <!-- Application name -->
     <string name="application_name" translatable="false">Aspire</string>
     <!-- Application copyright -->
-    <string name="application_copyright">Copyright \u00A9 CyanogenMod 2013</string>
+    <string name="application_copyright">Based on CyanogenMod Trebuchet</string>
     <!-- Application version -->
     <string name="application_version">2.0</string>
     <!-- Accessibility-facing application name -->
