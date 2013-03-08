@@ -31,10 +31,7 @@ import android.util.DisplayMetrics;
 import android.view.FocusFinder;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.accessibility.AccessibilityManager;
 import android.widget.FrameLayout;
-
-import com.collective.aspire.R;
 
 public class Cling extends FrameLayout {
 
@@ -88,6 +85,8 @@ public class Cling extends FrameLayout {
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.Cling, defStyle, 0);
         mDrawIdentifier = a.getString(R.styleable.Cling_drawIdentifier);
         a.recycle();
+
+        setClickable(true);
     }
 
     void init(Launcher l, int[] positionData) {
@@ -138,34 +137,25 @@ public class Cling extends FrameLayout {
             return new int[]{getMeasuredWidth() / 2, getMeasuredHeight() - (mButtonBarHeight / 2)};
         } else if (mDrawIdentifier.equals(WORKSPACE_LANDSCAPE)) {
             return new int[]{getMeasuredWidth() - (mButtonBarHeight / 2), getMeasuredHeight() / 2};
-        } else if (mDrawIdentifier.equals(ALLAPPS_SORT_PORTRAIT) ||
-                   mDrawIdentifier.equals(ALLAPPS_SORT_LANDSCAPE) ||
-                   mDrawIdentifier.equals(ALLAPPS_SORT_LARGE)) {
-            return new int[]{mButtonBarHeight / 2, mButtonBarHeight / 2};
         } else if (mDrawIdentifier.equals(WORKSPACE_LARGE)) {
             final float scale = LauncherApplication.getScreenDensity();
             final int cornerXOffset = (int) (scale * 15);
             final int cornerYOffset = (int) (scale * 10);
             return new int[]{getMeasuredWidth() - cornerXOffset, cornerYOffset};
         } else if (mDrawIdentifier.equals(ALLAPPS_PORTRAIT) ||
-                   mDrawIdentifier.equals(ALLAPPS_LANDSCAPE) ||
-                   mDrawIdentifier.equals(ALLAPPS_LARGE)) {
+                mDrawIdentifier.equals(ALLAPPS_LANDSCAPE) ||
+                mDrawIdentifier.equals(ALLAPPS_LARGE) ||
+                mDrawIdentifier.equals(ALLAPPS_SORT_PORTRAIT) ||
+                mDrawIdentifier.equals(ALLAPPS_SORT_LANDSCAPE) ||
+                mDrawIdentifier.equals(ALLAPPS_SORT_LARGE)) {
             return mPositionData;
         }
         return new int[]{-1, -1};
     }
 
-
-    public View findViewToTakeAccessibilityFocusFromHover(View child, View descendant) {
-        if (descendant.includeForAccessibility()) {
-            return descendant;
-        }
-        return null;
-    }
-
     @Override
     public View focusSearch(int direction) {
-        return this.focusSearch(null, direction);
+        return this.focusSearch(this, direction);
     }
 
     @Override
@@ -217,7 +207,7 @@ public class Cling extends FrameLayout {
             }
         }
         return true;
-    };
+    }
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
@@ -290,10 +280,10 @@ public class Cling extends FrameLayout {
 
             canvas.drawBitmap(b, 0, 0, null);
             c.setBitmap(null);
-            b = null;
+            b.recycle();
         }
 
         // Draw the rest of the cling
         super.dispatchDraw(canvas);
-    };
+    }
 }

@@ -44,7 +44,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.collective.aspire.R;
 import com.collective.aspire.FolderInfo.FolderListener;
 import com.collective.aspire.preference.PreferencesProvider;
 
@@ -58,9 +57,7 @@ import java.util.Comparator;
 public class Folder extends LinearLayout implements DragSource, View.OnClickListener,
         View.OnLongClickListener, DropTarget, FolderListener, TextView.OnEditorActionListener,
         View.OnFocusChangeListener {
-
-    @SuppressWarnings("unused")
-    private static final String TAG = "Launcher.Folder";
+    private static final String TAG = "Trebuchet.Folder";
 
     protected DragController mDragController;
     protected Launcher mLauncher;
@@ -111,6 +108,8 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
     private static String sHintText;
     private ObjectAnimator mOpenCloseAnimator;
 
+    private boolean mDestroyed;
+
     /**
      * Used to inflate the Workspace from XML.
      *
@@ -128,8 +127,8 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         mMaxCountY = res.getInteger(R.integer.folder_max_count_y);
         mMaxNumItems = res.getInteger(R.integer.folder_max_num_items);
         if (mMaxCountX < 0 || mMaxCountY < 0 || mMaxNumItems < 0) {
-            mMaxCountX = LauncherModel.getCellCountX();
-            mMaxCountY = LauncherModel.getCellCountY();
+            mMaxCountX = LauncherModel.getWorkspaceCellCountX();
+            mMaxCountY = LauncherModel.getWorkspaceCellCountY();
             mMaxNumItems = mMaxCountX * mMaxCountY;
         }
 
@@ -174,7 +173,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         mFolderName.setInputType(mFolderName.getInputType() |
                 InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
 
-        if (PreferencesProvider.Interface.Homescreen.getHideIconLabels(mLauncher)){
+        if (PreferencesProvider.Interface.Homescreen.getHideIconLabels()){
             mFolderName.setVisibility(View.GONE);
             mFolderNameHeight = getPaddingBottom();
         }
@@ -260,7 +259,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         // Convert to a string here to ensure that no other state associated with the text field
         // gets saved.
         String newTitle = mFolderName.getText().toString();
-        if (!PreferencesProvider.Interface.Homescreen.getHideIconLabels(mLauncher)) {
+        if (!PreferencesProvider.Interface.Homescreen.getHideIconLabels()) {
             mInfo.setTitle(newTitle);
         }
         LauncherModel.updateItemInDatabase(mLauncher, mInfo);
@@ -339,8 +338,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
     private void placeInReadingOrder(ArrayList<ShortcutInfo> items) {
         int maxX = 0;
         int count = items.size();
-        for (int i = 0; i < count; i++) {
-            ShortcutInfo item = items.get(i);
+        for (ShortcutInfo item : items) {
             if (item.cellX > maxX) {
                 maxX = item.cellX;
             }
@@ -365,8 +363,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         setupContentForNumItems(children.size());
         placeInReadingOrder(children);
         int count = 0;
-        for (int i = 0; i < children.size(); i++) {
-            ShortcutInfo child = (ShortcutInfo) children.get(i);
+        for (ShortcutInfo child : children) {
             if (!createAndAddShortcut(child)) {
                 overflow.add(child);
             } else {
@@ -429,7 +426,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         PropertyValuesHolder scaleX = PropertyValuesHolder.ofFloat("scaleX", 1.0f);
         PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat("scaleY", 1.0f);
         final ObjectAnimator oa = mOpenCloseAnimator =
-            ObjectAnimator.ofPropertyValuesHolder(this, alpha, scaleX, scaleY);
+            LauncherAnimUtils.ofPropertyValuesHolder(this, alpha, scaleX, scaleY);
 
         oa.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -487,7 +484,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         PropertyValuesHolder scaleX = PropertyValuesHolder.ofFloat("scaleX", 0.9f);
         PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat("scaleY", 0.9f);
         final ObjectAnimator oa = mOpenCloseAnimator =
-                ObjectAnimator.ofPropertyValuesHolder(this, alpha, scaleX, scaleY);
+                LauncherAnimUtils.ofPropertyValuesHolder(this, alpha, scaleX, scaleY);
 
         oa.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -585,11 +582,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
     };
 
     boolean readingOrderGreaterThan(int[] v1, int[] v2) {
-        if (v1[1] > v2[1] || (v1[1] == v2[1] && v1[0] > v2[0])) {
-            return true;
-        } else {
-            return false;
-        }
+        return v1[1] > v2[1] || (v1[1] == v2[1] && v1[0] > v2[0]);
     }
 
     private void realTimeReorder(int[] empty, int[] target) {
@@ -750,11 +743,10 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
 
     private void updateItemLocationsInDatabase() {
         ArrayList<View> list = getItemsInReadingOrder();
-        for (int i = 0; i < list.size(); i++) {
-            View v = list.get(i);
+        for (View v : list) {
             ItemInfo info = (ItemInfo) v.getTag();
             LauncherModel.moveItemInDatabase(mLauncher, info, mInfo.id, 0,
-                        info.cellX, info.cellY);
+                    info.cellX, info.cellY);
         }
     }
 
@@ -813,10 +805,10 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
                 + mFolderNameHeight;
         DragLayer parent = (DragLayer) mLauncher.findViewById(R.id.drag_layer);
 
-        parent.getDescendantRectRelativeToSelf(mFolderIcon, mTempRect);
+        float scale = parent.getDescendantRectRelativeToSelf(mFolderIcon, mTempRect);
 
-        int centerX = mTempRect.centerX();
-        int centerY = mTempRect.centerY();
+        int centerX = (int) (mTempRect.left + mTempRect.width() * scale / 2);
+        int centerY = (int) (mTempRect.top + mTempRect.height() * scale / 2);
         int centeredLeft = centerX - width / 2;
         int centeredTop = centerY - height / 2;
 
@@ -902,8 +894,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
         }
         mContent.removeAllViews();
 
-        for (int i = 0; i < list.size(); i++) {
-            View v = list.get(i);
+        for (View v : list) {
             mContent.getVacantCell(vacant, 1, 1);
             CellLayout.LayoutParams lp = (CellLayout.LayoutParams) v.getLayoutParams();
             lp.cellX = vacant[0];
@@ -915,8 +906,7 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
                 LauncherModel.addOrMoveItemInDatabase(mLauncher, info, mInfo.id, 0,
                         info.cellX, info.cellY);
             }
-            boolean insert = false;
-            mContent.addViewToCellLayout(v, insert ? 0 : -1, (int)info.id, lp, true);
+            mContent.addViewToCellLayout(v, 0, (int) info.id, lp, true);
         }
         mItemsInvalidated = true;
     }
@@ -953,34 +943,47 @@ public class Folder extends LinearLayout implements DragSource, View.OnClickList
     }
 
     private void replaceFolderWithFinalItem() {
-        ItemInfo finalItem = null;
-
-        if (getItemCount() == 1) {
-            finalItem = mInfo.contents.get(0);
-        }
-
-        // Remove the folder completely
-        CellLayout cellLayout = mLauncher.getCellLayout(mInfo.container, mInfo.screen);
-        cellLayout.removeView(mFolderIcon);
-        if (mFolderIcon instanceof DropTarget) {
-            mDragController.removeDropTarget((DropTarget) mFolderIcon);
-        }
-        mLauncher.removeFolder(mInfo);
-
-        if (finalItem != null) {
-            LauncherModel.addOrMoveItemInDatabase(mLauncher, finalItem, mInfo.container,
-                    mInfo.screen, mInfo.cellX, mInfo.cellY);
-        }
-        LauncherModel.deleteItemFromDatabase(mLauncher, mInfo);
-
         // Add the last remaining child to the workspace in place of the folder
-        if (finalItem != null) {
-            View child = mLauncher.createShortcut(R.layout.application, cellLayout,
-                    (ShortcutInfo) finalItem);
+        Runnable onCompleteRunnable = new Runnable() {
+            @Override
+            public void run() {
+                CellLayout cellLayout = mLauncher.getCellLayout(mInfo.container, mInfo.screen);
 
-            mLauncher.getWorkspace().addInScreen(child, mInfo.container, mInfo.screen, mInfo.cellX,
-                    mInfo.cellY, mInfo.spanX, mInfo.spanY);
+               View child = null;
+                // Move the item from the folder to the workspace, in the position of the folder
+                if (getItemCount() == 1) {
+                    ShortcutInfo finalItem = mInfo.contents.get(0);
+                    child = mLauncher.createShortcut(R.layout.application, cellLayout,
+                            finalItem);
+                    LauncherModel.addOrMoveItemInDatabase(mLauncher, finalItem, mInfo.container,
+                            mInfo.screen, mInfo.cellX, mInfo.cellY);
+                }
+                if (getItemCount() <= 1) {
+                    // Remove the folder
+                    LauncherModel.deleteItemFromDatabase(mLauncher, mInfo);
+                    cellLayout.removeView(mFolderIcon);
+                    if (mFolderIcon instanceof DropTarget) {
+                        mDragController.removeDropTarget((DropTarget) mFolderIcon);
+                    }
+                    mLauncher.removeFolder(mInfo);
+                }
+                // We add the child after removing the folder to prevent both from existing at
+                // the same time in the CellLayout.
+                if (child != null) {
+                    mLauncher.getWorkspace().addInScreen(child, mInfo.container, mInfo.screen,
+                            mInfo.cellX, mInfo.cellY, mInfo.spanX, mInfo.spanY);
+                }
+            }
+        };
+        View finalChild = getItemAt(0);
+        if (finalChild != null) {
+            mFolderIcon.performDestroyAnimation(finalChild, onCompleteRunnable);
         }
+        mDestroyed = true;
+    }
+
+    boolean isDestroyed() {
+        return mDestroyed;
     }
 
     // This method keeps track of the last item in the folder for the purposes

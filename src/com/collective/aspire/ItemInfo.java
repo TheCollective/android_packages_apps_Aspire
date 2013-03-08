@@ -23,19 +23,20 @@ import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Represents an item in the launcher.
  */
 class ItemInfo {
-    
+
     static final int NO_ID = -1;
-    
+
     /**
      * The id in the settings database for this item
      */
     long id = NO_ID;
-    
+
     /**
      * One of {@link LauncherSettings.Favorites#ITEM_TYPE_APPLICATION},
      * {@link LauncherSettings.Favorites#ITEM_TYPE_SHORTCUT},
@@ -43,20 +44,20 @@ class ItemInfo {
      * {@link LauncherSettings.Favorites#ITEM_TYPE_APPWIDGET}.
      */
     int itemType;
-    
+
     /**
-     * The id of the container that holds this item. For the desktop, this will be 
+     * The id of the container that holds this item. For the desktop, this will be
      * {@link LauncherSettings.Favorites#CONTAINER_DESKTOP}. For the all applications folder it
      * will be {@link #NO_ID} (since it is not stored in the settings DB). For user folders
      * it will be the id of the folder.
      */
     long container = NO_ID;
-    
+
     /**
      * Iindicates the screen in which the shortcut appears.
      */
     int screen = -1;
-    
+
     /**
      * Indicates the X position of the associated cell.
      */
@@ -86,10 +87,16 @@ class ItemInfo {
      * Indicates the minimum Y cell span.
      */
     int minSpanY = 1;
+
     /**
-     * Indicates whether the item is a gesture.
+     * Indicates that this item needs to be updated in the db
      */
-    boolean isGesture = false;
+    boolean requiresDbUpdate = false;
+
+    /**
+     * Title of the item
+     */
+    CharSequence title;
 
     /**
      * The position of the item in a drag-and-drop operation.
@@ -108,6 +115,8 @@ class ItemInfo {
         screen = info.screen;
         itemType = info.itemType;
         container = info.container;
+        // tempdebug:
+        LauncherModel.checkItemInfo(this);
     }
 
     /** Returns the package name that the intent will resolve to, or an empty string if
@@ -132,14 +141,12 @@ class ItemInfo {
      */
     void onAddToDatabase(ContentValues values) { 
         values.put(LauncherSettings.BaseLauncherColumns.ITEM_TYPE, itemType);
-        if (!isGesture) {
-            values.put(LauncherSettings.Favorites.CONTAINER, container);
-            values.put(LauncherSettings.Favorites.SCREEN, screen);
-            values.put(LauncherSettings.Favorites.CELLX, cellX);
-            values.put(LauncherSettings.Favorites.CELLY, cellY);
-            values.put(LauncherSettings.Favorites.SPANX, spanX);
-            values.put(LauncherSettings.Favorites.SPANY, spanY);
-        }
+        values.put(LauncherSettings.Favorites.CONTAINER, container);
+        values.put(LauncherSettings.Favorites.SCREEN, screen);
+        values.put(LauncherSettings.Favorites.CELLX, cellX);
+        values.put(LauncherSettings.Favorites.CELLY, cellY);
+        values.put(LauncherSettings.Favorites.SPANX, spanX);
+        values.put(LauncherSettings.Favorites.SPANY, spanY);
     }
 
     void updateValuesWithCoordinates(ContentValues values, int cellX, int cellY) {
@@ -183,6 +190,6 @@ class ItemInfo {
     public String toString() {
         return "Item(id=" + this.id + " type=" + this.itemType + " container=" + this.container
             + " screen=" + screen + " cellX=" + cellX + " cellY=" + cellY + " spanX=" + spanX
-            + " spanY=" + spanY + " isGesture=" + isGesture + " dropPos=" + dropPos + ")";
+            + " spanY=" + spanY + " dropPos=" + Arrays.toString(dropPos) + ")";
     }
 }

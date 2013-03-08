@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,13 +29,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.collective.aspire.R;
-
 /**
  * The linear layout used strictly for the widget/wallpaper tab of the customization tray
  */
 public class PagedViewWidget extends LinearLayout {
-    static final String TAG = "PagedViewWidgetLayout";
+    private static final String TAG = "Trebuchet.PagedViewWidgetLayout";
 
     private static boolean sDeletePreviewsWhenDetachedFromWindow = true;
 
@@ -44,6 +43,7 @@ public class PagedViewWidget extends LinearLayout {
     boolean mShortPressTriggered = false;
     static PagedViewWidget sShortpressTarget = null;
     boolean mIsAppWidget;
+    private final Rect mOriginalImagePadding = new Rect();
 
     public PagedViewWidget(Context context) {
         this(context, null);
@@ -63,6 +63,17 @@ public class PagedViewWidget extends LinearLayout {
         setClipToPadding(false);
     }
 
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
+
+        final ImageView image = (ImageView) findViewById(R.id.widget_preview);
+        mOriginalImagePadding.left = image.getPaddingLeft();
+        mOriginalImagePadding.top = image.getPaddingTop();
+        mOriginalImagePadding.right = image.getPaddingRight();
+        mOriginalImagePadding.bottom = image.getPaddingBottom();
+    }
+
     public static void setDeletePreviewsWhenDetachedFromWindow(boolean value) {
         sDeletePreviewsWhenDetachedFromWindow = value;
     }
@@ -79,7 +90,7 @@ public class PagedViewWidget extends LinearLayout {
                     preview.getBitmap().recycle();
                 }
                 image.setImageDrawable(null);
-                }
+            }
         }
     }
 
@@ -95,8 +106,8 @@ public class PagedViewWidget extends LinearLayout {
         name.setText(info.label);
         final TextView dims = (TextView) findViewById(R.id.widget_dims);
         if (dims != null) {
-            int hSpan = Math.min(cellSpan[0], LauncherModel.getCellCountX());
-            int vSpan = Math.min(cellSpan[1], LauncherModel.getCellCountY());
+            int hSpan = Math.min(cellSpan[0], LauncherModel.getWorkspaceCellCountX());
+            int vSpan = Math.min(cellSpan[1], LauncherModel.getWorkspaceCellCountY());
             dims.setText(String.format(mDimensionsFormatString, hSpan, vSpan));
         }
     }
@@ -117,12 +128,12 @@ public class PagedViewWidget extends LinearLayout {
     public int[] getPreviewSize() {
         final ImageView i = (ImageView) findViewById(R.id.widget_preview);
         int[] maxSize = new int[2];
-        maxSize[0] = i.getWidth() - i.getPaddingLeft() - i.getPaddingRight();
-        maxSize[1] = i.getHeight() - i.getPaddingTop();
+        maxSize[0] = i.getWidth() - mOriginalImagePadding.left - mOriginalImagePadding.right;
+        maxSize[1] = i.getHeight() - mOriginalImagePadding.top;
         return maxSize;
     }
 
-    void applyPreview(FastBitmapDrawable preview, int index) {
+    void applyPreview(FastBitmapDrawable preview) {
         final PagedViewWidgetImageView image =
             (PagedViewWidgetImageView) findViewById(R.id.widget_preview);
         if (preview != null) {
@@ -132,10 +143,10 @@ public class PagedViewWidget extends LinearLayout {
                 // center horizontally
                 int[] imageSize = getPreviewSize();
                 int centerAmount = (imageSize[0] - preview.getIntrinsicWidth()) / 2;
-                image.setPadding(image.getPaddingLeft() + centerAmount,
-                        image.getPaddingTop(),
-                        image.getPaddingRight(),
-                        image.getPaddingBottom());
+                image.setPadding(mOriginalImagePadding.left + centerAmount,
+                        mOriginalImagePadding.top,
+                        mOriginalImagePadding.right,
+                        mOriginalImagePadding.bottom);
             }
             image.setAlpha(1f);
             image.mAllowRequestLayout = true;

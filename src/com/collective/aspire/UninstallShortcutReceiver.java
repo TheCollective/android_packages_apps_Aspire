@@ -35,7 +35,7 @@ import java.util.Set;
 
 public class UninstallShortcutReceiver extends BroadcastReceiver {
     private static final String ACTION_UNINSTALL_SHORTCUT =
-            "com.collective.aspire.action.UNINSTALL_SHORTCUT";
+            "com.android.launcher.action.UNINSTALL_SHORTCUT";
 
     // The set of shortcuts that are pending uninstall
     private static ArrayList<PendingUninstallShortcutInfo> mUninstallQueue =
@@ -141,7 +141,7 @@ public class UninstallShortcutReceiver extends BroadcastReceiver {
             newApps = sharedPrefs.getStringSet(InstallShortcutReceiver.NEW_APPS_LIST_KEY, newApps);
             synchronized (newApps) {
                 do {
-                    appRemoved = newApps.remove(intent.toUri(0).toString());
+                    appRemoved = newApps.remove(intent.toUri(0));
                 } while (appRemoved);
             }
             if (appRemoved) {

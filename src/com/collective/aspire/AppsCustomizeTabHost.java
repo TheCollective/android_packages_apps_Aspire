@@ -23,7 +23,6 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -41,7 +40,7 @@ import java.util.ArrayList;
 
 public class AppsCustomizeTabHost extends TabHost implements LauncherTransitionable,
         TabHost.OnTabChangeListener  {
-    static final String LOG_TAG = "AppsCustomizeTabHost";
+    private static final String TAG = "Trebuchet.AppsCustomizeTabHost";
 
     private static final String APPS_TAB_TAG = "APPS";
     private static final String WIDGETS_TAB_TAG = "WIDGETS";
@@ -50,7 +49,6 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
     private ViewGroup mTabs;
     private ViewGroup mTabsContainer;
     private AppsCustomizePagedView mAppsCustomizePane;
-    private boolean mSuppressContentCallback = false;
     private FrameLayout mAnimationBuffer;
     private LinearLayout mContent;
 
@@ -58,8 +56,6 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
     private boolean mTransitioningToWorkspace;
     private boolean mResetAfterTransition;
     private Runnable mRelayoutAndMakeVisible;
-
-    private Launcher mLauncher;
 
     // Preferences
     private boolean mJoinWidgetsApps;
@@ -75,15 +71,8 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
                 }
             };
 
-        mLauncher = (Launcher) context;
-
         // Preferences
-        mJoinWidgetsApps = PreferencesProvider.Interface.Drawer.getJoinWidgetsApps(context);
-        mFadeScrollingIndicator = PreferencesProvider.Interface.Drawer.Indicator.getFadeScrollingIndicator(context);
-    }
-
-    public void setup(Launcher launcher) {
-        mLauncher = launcher;
+        mJoinWidgetsApps = PreferencesProvider.Interface.Drawer.getJoinWidgetsApps();
     }
 
     /**
@@ -92,19 +81,19 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
      * reflects the new content (but doesn't do the animation and logic associated with changing
      * tabs manually).
      */
-    private void setContentTypeImmediate(AppsCustomizePagedView.ContentType type) {
+    void setContentTypeImmediate(AppsCustomizePagedView.ContentType type) {
+        setOnTabChangedListener(null);
         onTabChangedStart();
         onTabChangedEnd(type);
+        setCurrentTabByTag(getTabTagForContentType(type));
+        setOnTabChangedListener(this);
     }
     void selectAppsTab() {
         setContentTypeImmediate(AppsCustomizePagedView.ContentType.Applications);
-        setCurrentTabByTag(APPS_TAB_TAG);
     }
     void selectWidgetsTab() {
         setContentTypeImmediate(AppsCustomizePagedView.ContentType.Widgets);
         mAppsCustomizePane.setCurrentPageToWidgets();
-
-        setCurrentTabByTag(WIDGETS_TAB_TAG);
     }
 
     /**
@@ -141,12 +130,14 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
         tabView = (TextView) mLayoutInflater.inflate(R.layout.tab_widget_indicator, tabs, false);
         tabView.setText(label);
         tabView.setContentDescription(label);
-        tabView.setOnLongClickListener(new View.OnLongClickListener() {
-                public boolean onLongClick(View v) {
-                    mLauncher.onLongClickAppsTab(v);
-                    return true;
-                }
-        });
+        if (getContext() instanceof Launcher) {
+            tabView.setOnLongClickListener(new View.OnLongClickListener() {
+                    public boolean onLongClick(View v) {
+                        ((Launcher) getContext()).onLongClickAppsTab(v);
+                        return true;
+                    }
+            });
+        }
         addTab(newTabSpec(APPS_TAB_TAG).setIndicator(tabView).setContent(contentFactory));
         label = getContext().getString(R.string.widgets_tab_label);
         tabView = (TextView) mLayoutInflater.inflate(R.layout.tab_widget_indicator, tabs, false);
@@ -161,6 +152,10 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
         lastTab.setOnKeyListener(keyListener);
         View shopButton = findViewById(R.id.market_button);
         shopButton.setOnKeyListener(keyListener);
+
+        // Soft menu button
+        View overflowMenuButton = findViewById(R.id.overflow_menu_button);
+        overflowMenuButton.setOnKeyListener(keyListener);
 
         // Hide the tab bar until we measure
         mTabsContainer.setAlpha(0f);
@@ -177,20 +172,18 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
             if (contentWidth > 0 && mTabs.getLayoutParams().width != contentWidth) {
                 // Set the width and show the tab bar
                 mTabs.getLayoutParams().width = contentWidth;
-                post(mRelayoutAndMakeVisible);
+                mRelayoutAndMakeVisible.run();
             }
+
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
      public boolean onInterceptTouchEvent(MotionEvent ev) {
          // If we are mid transitioning to the workspace, then intercept touch events here so we
          // can ignore them, otherwise we just let all apps handle the touch events.
-         if (mInTransition && mTransitioningToWorkspace) {
-             return true;
-         }
-         return super.onInterceptTouchEvent(ev);
-     };
+         return mInTransition && mTransitioningToWorkspace || super.onInterceptTouchEvent(ev);
+     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -226,10 +219,6 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
     @Override
     public void onTabChanged(String tabId) {
         final AppsCustomizePagedView.ContentType type = getContentTypeForTabTag(tabId);
-        if (mSuppressContentCallback) {
-            mSuppressContentCallback = false;
-            return;
-        }
 
         if (!mAppsCustomizePane.isContentType(type) || mJoinWidgetsApps) {
 
@@ -282,47 +271,47 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
                     mAnimationBuffer.setVisibility(View.VISIBLE);
                     LayoutParams p = new FrameLayout.LayoutParams(child.getMeasuredWidth(),
                             child.getMeasuredHeight());
-                    p.setMargins((int) child.getLeft(), (int) child.getTop(), 0, 0);
+                    p.setMargins(child.getLeft(), child.getTop(), 0, 0);
                     mAnimationBuffer.addView(child, p);
 
-                    // Toggle the new content
-                    onTabChangedStart();
-                    onTabChangedEnd(type);
+                // Toggle the new content
+                onTabChangedStart();
+                onTabChangedEnd(type);
 
-                    // Animate the transition
-                    ObjectAnimator outAnim = ObjectAnimator.ofFloat(mAnimationBuffer, "alpha", 0f);
-                    outAnim.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                            mAnimationBuffer.setVisibility(View.GONE);
-                            mAnimationBuffer.removeAllViews();
-                            }
-                            @Override
-                            public void onAnimationCancel(Animator animation) {
-                            mAnimationBuffer.setVisibility(View.GONE);
-                            mAnimationBuffer.removeAllViews();
-                            }
-                            });
-                    ObjectAnimator inAnim = ObjectAnimator.ofFloat(mAppsCustomizePane, "alpha", 1f);
-                    inAnim.addListener(new AnimatorListenerAdapter() {
-                            @Override
-                            public void onAnimationEnd(Animator animation) {
-                            reloadCurrentPage();
-                            }
-                            });
-                    AnimatorSet animSet = new AnimatorSet();
-                    animSet.playTogether(outAnim, inAnim);
-                    animSet.setDuration(duration);
-                    animSet.start();
-                }}
-            });
-
-        }
+                // Animate the transition
+                ObjectAnimator outAnim = LauncherAnimUtils.ofFloat(mAnimationBuffer, "alpha", 0f);
+                outAnim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        mAnimationBuffer.setVisibility(View.GONE);
+                        mAnimationBuffer.removeAllViews();
+                    }
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+                        mAnimationBuffer.setVisibility(View.GONE);
+                        mAnimationBuffer.removeAllViews();
+                    }
+                });
+                ObjectAnimator inAnim = LauncherAnimUtils.ofFloat(mAppsCustomizePane, "alpha", 1f);
+                inAnim.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        reloadCurrentPage();
+                    }
+                });
+                AnimatorSet animSet = LauncherAnimUtils.createAnimatorSet();
+                animSet.playTogether(outAnim, inAnim);
+                animSet.setDuration(duration);
+                animSet.start();
+            }}
+        });
+	}
     }
 
     public void setCurrentTabFromContent(AppsCustomizePagedView.ContentType type) {
-        mSuppressContentCallback = true;
+        setOnTabChangedListener(null);
         setCurrentTabByTag(getTabTagForContentType(type));
+        setOnTabChangedListener(this);
     }
 
     /**
@@ -381,11 +370,6 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
             // force building the layer, so you don't get a blip early in an animation
             // when the layer is created layer
             buildLayer();
-
-            // Let the GC system know that now is a good time to do any garbage
-            // collection; makes it less likely we'll get a GC during the all apps
-            // to workspace animation
-            System.gc();
         }
     }
 
@@ -457,7 +441,7 @@ public class AppsCustomizeTabHost extends TabHost implements LauncherTransitiona
             // prevent slowing down the animation)
             mAppsCustomizePane.loadAssociatedPages(mAppsCustomizePane.getCurrentPage());
 
-            if (!LauncherApplication.isScreenLarge() && mFadeScrollingIndicator) {
+            if (!LauncherApplication.isScreenLarge()) {
                 mAppsCustomizePane.hideScrollingIndicator(false);
             }
         }

@@ -45,7 +45,7 @@ public class InterruptibleInOutAnimator {
     private int mDirection = STOPPED;
 
     public InterruptibleInOutAnimator(long duration, float fromValue, float toValue) {
-        mAnimator = ValueAnimator.ofFloat(fromValue, toValue).setDuration(duration);
+        mAnimator = LauncherAnimUtils.ofFloat(fromValue, toValue).setDuration(duration);
         mOriginalDuration = duration;
         mOriginalFromValue = fromValue;
         mOriginalToValue = toValue;
@@ -62,7 +62,7 @@ public class InterruptibleInOutAnimator {
         final long currentPlayTime = mAnimator.getCurrentPlayTime();
         final float toValue = (direction == IN) ? mOriginalToValue : mOriginalFromValue;
         final float startValue = mFirstRun ? mOriginalFromValue :
-                ((Float) mAnimator.getAnimatedValue()).floatValue();
+                (Float) mAnimator.getAnimatedValue();
 
         // Make sure it's stopped before we modify any values
         cancel();

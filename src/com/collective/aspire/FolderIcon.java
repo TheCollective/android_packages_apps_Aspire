@@ -41,17 +41,16 @@ import android.widget.TextView;
 
 import com.collective.aspire.DropTarget.DragObject;
 import com.collective.aspire.FolderInfo.FolderListener;
-import com.collective.aspire.preference.PreferencesProvider;
 
 import java.util.ArrayList;
 
 /**
- * An icon that can appear on in the workspace representing an {@link UserFolder}.
+ * An icon that can appear on in the workspace representing an {@link Folder}.
  */
 public class FolderIcon extends LinearLayout implements FolderListener {
     private Launcher mLauncher;
-    Folder mFolder;
-    FolderInfo mInfo;
+    private Folder mFolder;
+    private FolderInfo mInfo;
     private static boolean sStaticValuesDirty = true;
 
     private CheckLongPressHelper mLongPressHelper;
@@ -61,6 +60,7 @@ public class FolderIcon extends LinearLayout implements FolderListener {
     private static final int CONSUMPTION_ANIMATION_DURATION = 100;
     private static final int DROP_IN_ANIMATION_DURATION = 400;
     private static final int INITIAL_ITEM_ANIMATION_DURATION = 350;
+    private static final int FINAL_ITEM_ANIMATION_DURATION = 200;
 
     // The degree to which the inner ring grows when accepting drop
     private static final float INNER_RING_GROWTH_FACTOR = 0.15f;
@@ -93,8 +93,10 @@ public class FolderIcon extends LinearLayout implements FolderListener {
     private int mPreviewOffsetY;
     private float mMaxPerspectiveShift;
     boolean mAnimating = false;
+
     private PreviewItemDrawingParams mParams = new PreviewItemDrawingParams(0, 0, 0, 0);
     private PreviewItemDrawingParams mAnimParams = new PreviewItemDrawingParams(0, 0, 0, 0);
+    private ArrayList<ShortcutInfo> mHiddenItems = new ArrayList<ShortcutInfo>();
 
     public FolderIcon(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -110,15 +112,8 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         mLongPressHelper = new CheckLongPressHelper(this);
     }
 
-    public boolean isDropEnabled() {
-        final ViewGroup cellLayoutChildren = (ViewGroup) getParent();
-        final ViewGroup cellLayout = (ViewGroup) cellLayoutChildren.getParent();
-        final Workspace workspace = (Workspace) cellLayout.getParent();
-        return !workspace.isSmall();
-    }
-
     static FolderIcon fromXml(int resId, Launcher launcher, ViewGroup group,
-            FolderInfo folderInfo, IconCache iconCache) {
+            FolderInfo folderInfo) {
         @SuppressWarnings("all") // suppress dead code warning
         final boolean error = INITIAL_ITEM_ANIMATION_DURATION >= DROP_IN_ANIMATION_DURATION;
         if (error) {
@@ -196,7 +191,7 @@ public class FolderIcon extends LinearLayout implements FolderListener {
             if (mNeutralAnimator != null) {
                 mNeutralAnimator.cancel();
             }
-            mAcceptAnimator = ValueAnimator.ofFloat(0f, 1f);
+            mAcceptAnimator = LauncherAnimUtils.ofFloat(0f, 1f);
             mAcceptAnimator.setDuration(CONSUMPTION_ANIMATION_DURATION);
 
             final int previewSize = sPreviewSize;
@@ -225,7 +220,7 @@ public class FolderIcon extends LinearLayout implements FolderListener {
             if (mAcceptAnimator != null) {
                 mAcceptAnimator.cancel();
             }
-            mNeutralAnimator = ValueAnimator.ofFloat(0f, 1f);
+            mNeutralAnimator = LauncherAnimUtils.ofFloat(0f, 1f);
             mNeutralAnimator.setDuration(CONSUMPTION_ANIMATION_DURATION);
 
             final int previewSize = sPreviewSize;
@@ -278,6 +273,14 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         }
     }
 
+    Folder getFolder() {
+        return mFolder;
+    }
+
+    FolderInfo getFolderInfo() {
+        return mInfo;
+    }
+
     private boolean willAcceptItem(ItemInfo item) {
         final int itemType = item.itemType;
         return ((itemType == LauncherSettings.Favorites.ITEM_TYPE_APPLICATION ||
@@ -286,18 +289,17 @@ public class FolderIcon extends LinearLayout implements FolderListener {
                 !mFolder.isFull() && item != mInfo && !mInfo.opened);
     }
 
-    public boolean acceptDrop(Object dragInfo) {
-        final ItemInfo item = (ItemInfo) dragInfo;
-        return willAcceptItem(item);
+    public boolean acceptDrop(ItemInfo dragInfo) {
+        final ItemInfo item = dragInfo;
+        return !mFolder.isDestroyed() && willAcceptItem(item);
     }
 
     public void addItem(ShortcutInfo item) {
         mInfo.add(item);
-        LauncherModel.addOrMoveItemInDatabase(mLauncher, item, mInfo.id, 0, item.cellX, item.cellY);
     }
 
     public void onDragEnter(Object dragInfo) {
-        if (!willAcceptItem((ItemInfo) dragInfo)) return;
+        if (mFolder.isDestroyed() || !willAcceptItem((ItemInfo) dragInfo)) return;
         CellLayout.LayoutParams lp = (CellLayout.LayoutParams) getLayoutParams();
         CellLayout layout = (CellLayout) getParent().getParent();
         mFolderRingAnimator.setCell(lp.cellX, lp.cellY);
@@ -306,27 +308,33 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         layout.showFolderAccept(mFolderRingAnimator);
     }
 
-    public void onDragOver(Object dragInfo) {
-    }
-
     public void performCreateAnimation(final ShortcutInfo destInfo, final View destView,
             final ShortcutInfo srcInfo, final DragView srcView, Rect dstRect,
             float scaleRelativeToDragLayer, Runnable postAnimationRunnable) {
 
+        // These correspond two the drawable and view that the icon was dropped _onto_
         Drawable animateDrawable = ((TextView) destView).getCompoundDrawables()[1];
-        computePreviewDrawingParams(animateDrawable.getIntrinsicWidth(), destView.getMeasuredWidth());
-
-        // This will animate the dragView (srcView) into the new folder
-        onDrop(srcInfo, srcView, dstRect, scaleRelativeToDragLayer, 1, postAnimationRunnable, null);
+        computePreviewDrawingParams(animateDrawable.getIntrinsicWidth(),
+                destView.getMeasuredWidth());
 
         // This will animate the first item from it's position as an icon into its
         // position as the first item in the preview
-        animateFirstItem(animateDrawable, INITIAL_ITEM_ANIMATION_DURATION);
+        animateFirstItem(animateDrawable, INITIAL_ITEM_ANIMATION_DURATION, false, null);
         addItem(destInfo);
+
+        // This will animate the dragView (srcView) into the new folder
+        onDrop(srcInfo, srcView, dstRect, scaleRelativeToDragLayer, 1, postAnimationRunnable);
     }
 
-    public void onDragExit(Object dragInfo) {
-        onDragExit();
+    public void performDestroyAnimation(final View finalView, Runnable onCompleteRunnable) {
+        Drawable animateDrawable = ((TextView) finalView).getCompoundDrawables()[1];
+        computePreviewDrawingParams(animateDrawable.getIntrinsicWidth(), 
+                finalView.getMeasuredWidth());
+
+        // This will animate the first item from it's position as an icon into its
+        // position as the first item in the preview
+        animateFirstItem(animateDrawable, FINAL_ITEM_ANIMATION_DURATION, true,
+                onCompleteRunnable);
     }
 
     public void onDragExit() {
@@ -334,8 +342,7 @@ public class FolderIcon extends LinearLayout implements FolderListener {
     }
 
     private void onDrop(final ShortcutInfo item, DragView animateView, Rect finalRect,
-            float scaleRelativeToDragLayer, int index, Runnable postAnimationRunnable,
-            DragObject d) {
+            float scaleRelativeToDragLayer, int index, Runnable postAnimationRunnable) {
         item.cellX = -1;
         item.cellY = -1;
 
@@ -365,8 +372,8 @@ public class FolderIcon extends LinearLayout implements FolderListener {
 
             int[] center = new int[2];
             float scale = getLocalCenterForIndex(index, center);
-            center[0] = (int) Math.round(scaleRelativeToDragLayer * center[0]);
-            center[1] = (int) Math.round(scaleRelativeToDragLayer * center[1]);
+            center[0] = Math.round(scaleRelativeToDragLayer * center[0]);
+            center[1] = Math.round(scaleRelativeToDragLayer * center[1]);
 
             to.offset(center[0] - animateView.getMeasuredWidth() / 2,
                     center[1] - animateView.getMeasuredHeight() / 2);
@@ -378,9 +385,12 @@ public class FolderIcon extends LinearLayout implements FolderListener {
                     1, 1, finalScale, finalScale, DROP_IN_ANIMATION_DURATION,
                     new DecelerateInterpolator(2), new AccelerateInterpolator(2),
                     postAnimationRunnable, DragLayer.ANIMATION_END_DISAPPEAR, null);
+            addItem(item);
+            mHiddenItems.add(item);
             postDelayed(new Runnable() {
                 public void run() {
-                    addItem(item);
+                    mHiddenItems.remove(item);
+                    invalidate();
                 }
             }, DROP_IN_ANIMATION_DURATION);
         } else {
@@ -397,7 +407,7 @@ public class FolderIcon extends LinearLayout implements FolderListener {
             FolderInfo folder = (FolderInfo) d.dragInfo;
             mFolder.notifyDrop();
             for (ShortcutInfo fItem : folder.contents) {
-                onDrop(fItem, d.dragView, null, 1.0f, mInfo.contents.size(), d.postAnimationRunnable, d);
+                onDrop(fItem, d.dragView, null, 1.0f, mInfo.contents.size(), d.postAnimationRunnable);
             }
             mLauncher.removeFolder(folder);
             LauncherModel.deleteItemFromDatabase(mLauncher, folder);
@@ -406,11 +416,7 @@ public class FolderIcon extends LinearLayout implements FolderListener {
             item = (ShortcutInfo) d.dragInfo;
         }
         mFolder.notifyDrop();
-        onDrop(item, d.dragView, null, 1.0f, mInfo.contents.size(), d.postAnimationRunnable, d);
-    }
-
-    public DropTarget getDropTargetDelegate(DragObject d) {
-        return null;
+        onDrop(item, d.dragView, null, 1.0f, mInfo.contents.size(), d.postAnimationRunnable);
     }
 
     private void computePreviewDrawingParams(int drawableSize, int totalSize) {
@@ -462,8 +468,8 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         float offsetX = mParams.transX + (mParams.scale * mIntrinsicIconSize) / 2;
         float offsetY = mParams.transY + (mParams.scale * mIntrinsicIconSize) / 2;
 
-        center[0] = (int) Math.round(offsetX);
-        center[1] = (int) Math.round(offsetY);
+        center[0] = Math.round(offsetX);
+        center[1] = Math.round(offsetY);
         return mParams.scale;
     }
 
@@ -536,19 +542,20 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         if (!mAnimating) {
             for (int i = nItemsInPreview - 1; i >= 0; i--) {
                 v = (TextView) items.get(i);
-                d = v.getCompoundDrawables()[1];
-
-                mParams = computePreviewItemDrawingParams(i, mParams);
-                mParams.drawable = d;
-                drawPreviewItem(canvas, mParams);
+                if (!mHiddenItems.contains(v.getTag())) {
+                    d = v.getCompoundDrawables()[1];
+                    mParams = computePreviewItemDrawingParams(i, mParams);
+                    mParams.drawable = d;
+                    drawPreviewItem(canvas, mParams);
+                }
             }
         } else {
             drawPreviewItem(canvas, mAnimParams);
         }
     }
 
-    private void animateFirstItem(final Drawable d, int duration) {
-        computePreviewDrawingParams(d);
+    private void animateFirstItem(final Drawable d, int duration, final boolean reverse,
+            final Runnable onCompleteRunnable) {
         final PreviewItemDrawingParams finalParams = computePreviewItemDrawingParams(0, null);
 
         final float scale0 = 1.0f;
@@ -556,10 +563,14 @@ public class FolderIcon extends LinearLayout implements FolderListener {
         final float transY0 = (mAvailableSpaceInPreview - d.getIntrinsicHeight()) / 2;
         mAnimParams.drawable = d;
 
-        ValueAnimator va = ValueAnimator.ofFloat(0f, 1.0f);
+        ValueAnimator va = LauncherAnimUtils.ofFloat(0f, 1.0f);
         va.addUpdateListener(new AnimatorUpdateListener(){
             public void onAnimationUpdate(ValueAnimator animation) {
                 float progress = (Float) animation.getAnimatedValue();
+                if (reverse) {
+                    progress = 1 - progress;
+                    mPreviewBackground.setAlpha(progress);
+                }
 
                 mAnimParams.transX = transX0 + progress * (finalParams.transX - transX0);
                 mAnimParams.transY = transY0 + progress * (finalParams.transY - transY0);
@@ -575,6 +586,9 @@ public class FolderIcon extends LinearLayout implements FolderListener {
             @Override
             public void onAnimationEnd(Animator animation) {
                 mAnimating = false;
+                if (onCompleteRunnable != null) {
+                    onCompleteRunnable.run();
+                }
             }
         });
         va.setDuration(duration);

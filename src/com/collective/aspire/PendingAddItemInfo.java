@@ -20,6 +20,8 @@ import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.pm.ActivityInfo;
+import android.os.Bundle;
+import android.content.Intent;
 import android.os.Parcelable;
 
 /**
@@ -55,6 +57,7 @@ class PendingAddWidgetInfo extends PendingAddItemInfo {
     int icon;
     AppWidgetProviderInfo info;
     AppWidgetHostView boundWidget;
+    Bundle bindOptions = null;
 
     // Any configuration data that we want to pass to a configuration activity when
     // starting up a widget
@@ -95,6 +98,7 @@ class PendingAddWidgetInfo extends PendingAddItemInfo {
         spanY = copy.spanY;
         minSpanX = copy.minSpanX;
         minSpanY = copy.minSpanY;
+        bindOptions = copy.bindOptions == null ? null : (Bundle) copy.bindOptions.clone();
     }
 
     @Override

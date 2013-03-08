@@ -24,15 +24,12 @@ import android.animation.ValueAnimator.AnimatorUpdateListener;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -41,14 +38,12 @@ import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import com.collective.aspire.R;
-
 import java.util.ArrayList;
 
 /**
  * A ViewGroup that coordinates dragging across its descendants
  */
-public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChangeListener {
+public class DragLayer extends FrameLayout {
     private DragController mDragController;
     private int[] mTmpXY = new int[2];
 
@@ -70,8 +65,6 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
 
     private boolean mHoverPointClosesFolder = false;
     private Rect mHitRect = new Rect();
-    private int mWorkspaceIndex = -1;
-    private int mQsbIndex = -1;
     public static final int ANIMATION_END_DISAPPEAR = 0;
     public static final int ANIMATION_END_FADE_OUT = 1;
     public static final int ANIMATION_END_REMAIN_VISIBLE = 2;
@@ -88,7 +81,6 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
         // Disable multitouch across the workspace/all apps/customize tray
         setMotionEventSplittingEnabled(false);
         setChildrenDrawingOrderEnabled(true);
-        setOnHierarchyChangeListener(this);
 
         mLeftHoverDrawable = getResources().getDrawable(R.drawable.page_hover_left_holo);
         mRightHoverDrawable = getResources().getDrawable(R.drawable.page_hover_right_holo);
@@ -106,18 +98,12 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
 
     private boolean isEventOverFolderTextRegion(Folder folder, MotionEvent ev) {
         getDescendantRectRelativeToSelf(folder.getEditTextRegion(), mHitRect);
-        if (mHitRect.contains((int) ev.getX(), (int) ev.getY())) {
-            return true;
-        }
-        return false;
+        return mHitRect.contains((int) ev.getX(), (int) ev.getY());
     }
 
     private boolean isEventOverFolder(Folder folder, MotionEvent ev) {
         getDescendantRectRelativeToSelf(folder, mHitRect);
-        if (mHitRect.contains((int) ev.getX(), (int) ev.getY())) {
-            return true;
-        }
-        return false;
+        return mHitRect.contains((int) ev.getX(), (int) ev.getY());
     }
 
     private boolean handleTouchDown(MotionEvent ev, boolean intercept) {
@@ -169,6 +155,9 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
 
     @Override
     public boolean onInterceptHoverEvent(MotionEvent ev) {
+        if (mLauncher == null || mLauncher.getWorkspace() == null) {
+            return false;
+        }
         Folder currentFolder = mLauncher.getWorkspace().getOpenFolder();
         if (currentFolder == null) {
             return false;
@@ -185,10 +174,8 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
                             sendTapOutsideFolderAccessibilityEvent(currentFolder.isEditingName());
                             mHoverPointClosesFolder = true;
                             return true;
-                        } else if (isOverFolder) {
-                            mHoverPointClosesFolder = false;
                         } else {
-                            return true;
+                            mHoverPointClosesFolder = false;
                         }
                     case MotionEvent.ACTION_HOVER_MOVE:
                         isOverFolder = isEventOverFolder(currentFolder, ev);
@@ -256,8 +243,7 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
                     mCurrentResizeFrame = null;
             }
         }
-        if (handled) return true;
-        return mDragController.onTouchEvent(ev);
+        return handled || mDragController.onTouchEvent(ev);
     }
 
     /**
@@ -276,10 +262,10 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
         return scale;
     }
 
-    public void getLocationInDragLayer(View child, int[] loc) {
+    public float getLocationInDragLayer(View child, int[] loc) {
         loc[0] = 0;
         loc[1] = 0;
-        getDescendantCoordRelativeToSelf(child, loc);
+        return getDescendantCoordRelativeToSelf(child, loc);
     }
 
     /**
@@ -288,7 +274,9 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
      *
      * @param descendant The descendant to which the passed coordinate is relative.
      * @param coord The coordinate that we want mapped.
-     * @return The factor by which this descendant is scaled relative to this DragLayer.
+     * @return The factor by which this descendant is scaled relative to this DragLayer. Caution
+     *         this scale factor is assumed to be equal in X and Y, and so if at any point this
+     *         assumption fails, we will need to return a pair of scale factors.
      */
     public float getDescendantCoordRelativeToSelf(View descendant, int[] coord) {
         float scale = 1.0f;
@@ -306,8 +294,8 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
             pt[1] += view.getTop() - view.getScrollY();
             viewParent = view.getParent();
         }
-        coord[0] = (int) Math.round(pt[0]);
-        coord[1] = (int) Math.round(pt[1]);
+        coord[0] = Math.round(pt[0]);
+        coord[1] = Math.round(pt[1]);
         return scale;
     }
 
@@ -400,16 +388,7 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
         }
     }
 
-    public boolean hasResizeFrames() {
-        return mResizeFrames.size() > 0;
-    }
-
-    public boolean isWidgetBeingResized() {
-        return mCurrentResizeFrame != null;
-    }
-
-    public void addResizeFrame(ItemInfo itemInfo, LauncherAppWidgetHostView widget,
-            CellLayout cellLayout) {
+    public void addResizeFrame(LauncherAppWidgetHostView widget, CellLayout cellLayout) {
         AppWidgetResizeFrame resizeFrame = new AppWidgetResizeFrame(getContext(),
                 widget, cellLayout, this);
 
@@ -446,7 +425,6 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
     public void animateViewIntoPosition(DragView dragView, final View child, int duration,
             final Runnable onFinishAnimationRunnable, View anchorView) {
         ShortcutAndWidgetContainer parentChildren = (ShortcutAndWidgetContainer) child.getParent();
-        CellLayout parent = (CellLayout) (CellLayout) parentChildren.getParent();
         CellLayout.LayoutParams lp =  (CellLayout.LayoutParams) child.getLayoutParams();
         parentChildren.measureChild(child);
 
@@ -454,12 +432,16 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
         getViewRectRelativeToSelf(dragView, r);
 
         int coord[] = new int[2];
-        coord[0] = lp.x;
-        coord[1] = lp.y;
+        float childScale = child.getScaleX();
+        coord[0] = lp.x + (int) (child.getMeasuredWidth() * (1 - childScale) / 2);
+        coord[1] = lp.y + (int) (child.getMeasuredHeight() * (1 - childScale) / 2);
 
         // Since the child hasn't necessarily been laid out, we force the lp to be updated with
         // the correct coordinates (above) and use these to determine the final location
         float scale = getDescendantCoordRelativeToSelf((View) child.getParent(), coord);
+        // We need to account for the scale of the child itself, as the above only accounts for
+        // for the scale in parents.
+        scale *= childScale;
         int toX = coord[0];
         int toY = coord[1];
         if (child instanceof TextView) {
@@ -473,7 +455,8 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
             toX -= (dragView.getMeasuredWidth() - Math.round(scale * child.getMeasuredWidth())) / 2;
         } else if (child instanceof FolderIcon) {
             // Account for holographic blur padding on the drag view
-            toY -= Workspace.DRAG_BITMAP_PADDING / 2;
+            toY -= scale * Workspace.DRAG_BITMAP_PADDING / 2;
+            toY -= (1 - scale) * dragView.getMeasuredHeight() / 2;
             // Center in the x coordinate about the target's drawable
             toX -= (dragView.getMeasuredWidth() - Math.round(scale * child.getMeasuredWidth())) / 2;
         } else {
@@ -682,53 +665,11 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
         mFadeOutAnim.start();
     }
 
-    @Override
-    public void onChildViewAdded(View parent, View child) {
-        updateChildIndices();
-    }
-
-    @Override
-    public void onChildViewRemoved(View parent, View child) {
-        updateChildIndices();
-    }
-
-    private void updateChildIndices() {
-        if (mLauncher != null) {
-            mWorkspaceIndex = indexOfChild(mLauncher.getWorkspace());
-            mQsbIndex = indexOfChild(mLauncher.getSearchBar());
-        }
-    }
-
-    @Override
-    protected int getChildDrawingOrder(int childCount, int i) {
-        // We don't want to prioritize the workspace drawing on top of the other children in
-        // landscape for the overscroll event.
-        if (LauncherApplication.isScreenLandscape(getContext())) {
-            return super.getChildDrawingOrder(childCount, i);
-        }
-
-        if (mWorkspaceIndex == -1 || mQsbIndex == -1 || 
-                mLauncher.getWorkspace().isDrawingBackgroundGradient()) {
-            return i;
-        }
-
-        // This ensures that the workspace is drawn above the hotseat and qsb,
-        // except when the workspace is drawing a background gradient, in which
-        // case we want the workspace to stay behind these elements.
-        if (i == mQsbIndex) {
-            return mWorkspaceIndex;
-        } else if (i == mWorkspaceIndex) {
-            return mQsbIndex;
-        } else {
-            return i;
-        }
-    }
-
     private boolean mInScrollArea;
     private Drawable mLeftHoverDrawable;
     private Drawable mRightHoverDrawable;
 
-    void onEnterScrollArea(int direction) {
+    void onEnterScrollArea() {
         mInScrollArea = true;
         invalidate();
     }
@@ -745,10 +686,11 @@ public class DragLayer extends FrameLayout implements ViewGroup.OnHierarchyChang
         if (mInScrollArea && !LauncherApplication.isScreenLarge()) {
             Workspace workspace = mLauncher.getWorkspace();
             int width = workspace.getWidth();
-            Rect childRect = new Rect();
-            getDescendantRectRelativeToSelf(workspace.getChildAt(0), childRect);
-
             int page = workspace.getNextPage();
+
+            Rect childRect = new Rect();
+            getDescendantRectRelativeToSelf(workspace.getChildAt(page), childRect);
+
             CellLayout leftPage = (CellLayout) workspace.getChildAt(page - 1);
             CellLayout rightPage = (CellLayout) workspace.getChildAt(page + 1);
 

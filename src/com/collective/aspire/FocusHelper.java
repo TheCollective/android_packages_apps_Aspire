@@ -81,12 +81,13 @@ public class FocusHelper {
     }
 
     /**
-     * Handles key events in a AppsCustomize tab between the last tab view and the shop button.
+     * Handles key events in a AppsCustomize tab between the last tab view and the shop/menu button.
      */
     static boolean handleAppsCustomizeTabKeyEvent(View v, int keyCode, KeyEvent e) {
         final TabHost tabHost = findTabHostParent(v);
         final ViewGroup contents = tabHost.getTabContentView();
         final View shop = tabHost.findViewById(R.id.market_button);
+        final View overflowMenu = tabHost.findViewById(R.id.overflow_menu_button);
 
         final int action = e.getAction();
         final boolean handleKeyEvent = (action != KeyEvent.ACTION_UP);
@@ -95,8 +96,12 @@ public class FocusHelper {
             case KeyEvent.KEYCODE_DPAD_RIGHT:
                 if (handleKeyEvent) {
                     // Select the shop button if we aren't on it
-                    if (v != shop) {
-                        shop.requestFocus();
+                    if (v != shop || v != overflowMenu) {
+                        if (shop.getVisibility() == View.VISIBLE){
+                            shop.requestFocus();
+                        } else if (overflowMenu.getVisibility() == View.VISIBLE) {
+                            overflowMenu.requestFocus();
+                        }
                     }
                 }
                 wasHandled = true;
@@ -104,7 +109,7 @@ public class FocusHelper {
             case KeyEvent.KEYCODE_DPAD_DOWN:
                 if (handleKeyEvent) {
                     // Select the content view (down is handled by the tab key handler otherwise)
-                    if (v == shop) {
+                    if (v == shop || v == overflowMenu) {
                         contents.requestFocus();
                         wasHandled = true;
                     }
@@ -139,7 +144,7 @@ public class FocusHelper {
         final TabWidget tabs = tabHost.getTabWidget();
         final int widgetIndex = parent.indexOfChild(w);
         final int widgetCount = parent.getChildCount();
-        final int pageIndex = ((PagedView) container).indexToPage(container.indexOfChild(parent));
+        final int pageIndex = container.indexToPage(container.indexOfChild(parent));
         final int pageCount = container.getChildCount();
         final int cellCountX = parent.getCellCountX();
         final int cellCountY = parent.getCellCountY();
@@ -148,7 +153,7 @@ public class FocusHelper {
 
         final int action = e.getAction();
         final boolean handleKeyEvent = (action != KeyEvent.ACTION_UP);
-        ViewGroup newParent = null;
+        ViewGroup newParent;
         // Now that we load items in the bg asynchronously, we can't just focus
         // child siblings willy-nilly
         View child = null;
@@ -299,7 +304,7 @@ public class FocusHelper {
         final TabWidget tabs = tabHost.getTabWidget();
         final int iconIndex = itemContainer.indexOfChild(v);
         final int itemCount = itemContainer.getChildCount();
-        final int pageIndex = ((PagedView) container).indexToPage(container.indexOfChild(parentLayout));
+        final int pageIndex = container.indexToPage(container.indexOfChild(parentLayout));
         final int pageCount = container.getChildCount();
 
         final int x = iconIndex % countX;
@@ -307,10 +312,10 @@ public class FocusHelper {
 
         final int action = e.getAction();
         final boolean handleKeyEvent = (action != KeyEvent.ACTION_UP);
-        ViewGroup newParent = null;
+        ViewGroup newParent;
         // Side pages do not always load synchronously, so check before focusing child siblings
         // willy-nilly
-        View child = null;
+        View child;
         boolean wasHandled = false;
         switch (keyCode) {
             case KeyEvent.KEYCODE_DPAD_LEFT:

@@ -7,9 +7,9 @@ import sys
 import sqlite3
 
 SCREENS = 5
-COLUMNS = 6
-ROWS = 5
-HOTSEAT_SIZE = 7
+COLUMNS = 4
+ROWS = 4
+HOTSEAT_SIZE = 5
 CELL_SIZE = 110
 
 DIR = "db_files"

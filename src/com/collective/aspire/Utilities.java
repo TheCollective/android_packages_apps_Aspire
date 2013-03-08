@@ -16,8 +16,6 @@
 
 package com.collective.aspire;
 
-import java.util.Random;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -29,20 +27,17 @@ import android.graphics.Paint;
 import android.graphics.PaintFlagsDrawFilter;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
-import android.graphics.TableMaskFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PaintDrawable;
 import android.util.DisplayMetrics;
-
-import com.collective.aspire.R;
 
 /**
  * Various utilities shared amongst the Launcher's classes.
  */
 final class Utilities {
     @SuppressWarnings("unused")
-    private static final String TAG = "Launcher.Utilities";
+    private static final String TAG = "Trebuchet.Utilities";
 
     private static int sIconWidth = -1;
     private static int sIconHeight = -1;
@@ -243,36 +238,11 @@ final class Utilities {
 
         sBlurPaint.setMaskFilter(new BlurMaskFilter(5 * density, BlurMaskFilter.Blur.NORMAL));
         sGlowColorPressedPaint.setColor(0xffffc300);
-        sGlowColorPressedPaint.setMaskFilter(TableMaskFilter.CreateClipTable(0, 30));
         sGlowColorFocusedPaint.setColor(0xffff8e00);
-        sGlowColorFocusedPaint.setMaskFilter(TableMaskFilter.CreateClipTable(0, 30));
 
         ColorMatrix cm = new ColorMatrix();
         cm.setSaturation(0.2f);
         sDisabledPaint.setColorFilter(new ColorMatrixColorFilter(cm));
         sDisabledPaint.setAlpha(0x88);
-    }
-
-    /** Only works for positive numbers. */
-    static int roundToPow2(int n) {
-        int orig = n;
-        n >>= 1;
-        int mask = 0x8000000;
-        while (mask != 0 && (n & mask) == 0) {
-            mask >>= 1;
-        }
-        while (mask != 0) {
-            n |= mask;
-            mask >>= 1;
-        }
-        n += 1;
-        if (n != orig) {
-            n <<= 1;
-        }
-        return n;
-    }
-
-    static int generateRandomId() {
-        return new Random(System.currentTimeMillis()).nextInt(1 << 24);
     }
 }

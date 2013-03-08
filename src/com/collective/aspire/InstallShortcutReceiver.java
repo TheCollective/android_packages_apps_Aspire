@@ -22,10 +22,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.os.Debug;
 import android.widget.Toast;
 
-import com.collective.aspire.R;
+import com.collective.aspire.preference.PreferencesProvider;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,7 +33,7 @@ import java.util.Set;
 
 public class InstallShortcutReceiver extends BroadcastReceiver {
     public static final String ACTION_INSTALL_SHORTCUT =
-            "com.collective.aspire.action.INSTALL_SHORTCUT";
+            "com.android.launcher.action.INSTALL_SHORTCUT";
     public static final String NEW_APPS_PAGE_KEY = "apps.new.page";
     public static final String NEW_APPS_LIST_KEY = "apps.new.list";
 
@@ -92,8 +91,8 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
             }
         }
         // Queue the item up for adding if launcher has not loaded properly yet
-        boolean launcherNotLoaded = LauncherModel.getCellCountX() <= 0 ||
-                LauncherModel.getCellCountY() <= 0;
+        boolean launcherNotLoaded = LauncherModel.getWorkspaceCellCountX() <= 0 ||
+                LauncherModel.getWorkspaceCellCountY() <= 0;
 
         PendingInstallShortcutInfo info = new PendingInstallShortcutInfo(data, name, intent);
         if (mUseInstallQueue || launcherNotLoaded) {
@@ -133,15 +132,18 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
         boolean found = false;
         synchronized (app) {
             final ArrayList<ItemInfo> items = LauncherModel.getItemsInLocalCoordinates(context);
-            final boolean exists = LauncherModel.shortcutExists(context, name, intent);
+            final boolean exists = LauncherModel.shortcutExists(context, intent);
 
             // Try adding to the workspace screens incrementally, starting at the default or center
             // screen and alternating between +1, -1, +2, -2, etc. (using ~ ceil(i/2f)*(-1)^(i-1))
-            final int screen = Launcher.DEFAULT_SCREEN;
-            for (int i = 0; i < (2 * Launcher.MAX_SCREEN_COUNT) + 1 && !found; ++i) {
+            final int screenCount = PreferencesProvider.Interface.Homescreen.getNumberHomescreens();
+            final int screenDefault = PreferencesProvider.Interface.Homescreen.getDefaultHomescreen(screenCount / 2);
+            final int screen = (screenDefault >= screenCount) ? screenCount / 2 : screenDefault;
+
+            for (int i = 0; i <= (2 * screenCount) + 1 && !found; ++i) {
                 int si = screen + (int) ((i / 2f) + 0.5f) * ((i % 2 == 1) ? 1 : -1);
-                if (0 <= si && si < Launcher.MAX_SCREEN_COUNT) {
-                    found = installShortcut(context, data, items, name, intent, si, exists, sp,
+                if (0 <= si && si < screenCount) {
+                    found = installShortcut(context, data, items, intent, si, exists, sp,
                             result);
                 }
             }
@@ -161,10 +163,10 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
     }
 
     private static boolean installShortcut(Context context, Intent data, ArrayList<ItemInfo> items,
-            String name, Intent intent, final int screen, boolean shortcutExists,
+            Intent intent, final int screen, boolean shortcutExists,
             final SharedPreferences sharedPrefs, int[] result) {
         int[] tmpCoordinates = new int[2];
-        if (findEmptyCell(context, items, tmpCoordinates, screen)) {
+        if (findEmptyCell(items, tmpCoordinates, screen)) {
             if (intent != null) {
                 if (intent.getAction() == null) {
                     intent.setAction(Intent.ACTION_VIEW);
@@ -187,7 +189,7 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
                         newApps = sharedPrefs.getStringSet(NEW_APPS_LIST_KEY, newApps);
                     }
                     synchronized (newApps) {
-                        newApps.add(intent.toUri(0).toString());
+                        newApps.add(intent.toUri(0));
                     }
                     final Set<String> savedNewApps = newApps;
                     new Thread("setNewAppsThread") {
@@ -222,16 +224,14 @@ public class InstallShortcutReceiver extends BroadcastReceiver {
         return false;
     }
 
-    private static boolean findEmptyCell(Context context, ArrayList<ItemInfo> items, int[] xy,
+    private static boolean findEmptyCell(ArrayList<ItemInfo> items, int[] xy,
             int screen) {
-        final int xCount = LauncherModel.getCellCountX();
-        final int yCount = LauncherModel.getCellCountY();
+        final int xCount = LauncherModel.getWorkspaceCellCountX();
+        final int yCount = LauncherModel.getWorkspaceCellCountY();
         boolean[][] occupied = new boolean[xCount][yCount];
 
-        ItemInfo item = null;
         int cellX, cellY, spanX, spanY;
-        for (int i = 0; i < items.size(); ++i) {
-            item = items.get(i);
+        for (ItemInfo item : items) {
             if (item.container == LauncherSettings.Favorites.CONTAINER_DESKTOP) {
                 if (item.screen == screen) {
                     cellX = item.cellX;
