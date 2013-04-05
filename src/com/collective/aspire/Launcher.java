@@ -1676,14 +1676,15 @@ public final class Launcher extends Activity
             .setIcon(android.R.drawable.ic_menu_manage)
             .setIntent(manageApps)
             .setAlphabeticShortcut('M');
-        menu.add(0, MENU_SYSTEM_SETTINGS, 0, R.string.menu_settings)
-            .setIcon(android.R.drawable.ic_menu_preferences)
-            .setIntent(settings)
-            .setAlphabeticShortcut('P');
         menu.add(0, MENU_PREFERENCES, 0, R.string.menu_preferences)
             .setIcon(android.R.drawable.ic_menu_preferences)
             .setIntent(preferences)
             .setAlphabeticShortcut('O');
+        menu.add(0, MENU_SYSTEM_SETTINGS, 0, R.string.menu_settings)
+            .setIcon(android.R.drawable.ic_menu_preferences)
+            .setIntent(settings)
+            .setAlphabeticShortcut('P');
+
         if (!helpUrl.isEmpty()) {
             menu.add(0, MENU_HELP, 0, R.string.menu_help)
                 .setIcon(android.R.drawable.ic_menu_help)
