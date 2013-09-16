@@ -86,6 +86,22 @@ public final class PreferencesProvider {
                 return getBoolean("ui_homescreen_general_hide_icon_labels", false);
             }
             public static class Scrolling {
+                public static Workspace.TransitionEffect getTransitionEffect(String def) {
+                    try {
+                        return Workspace.TransitionEffect.valueOf(
+                                getString("ui_homescreen_scrolling_transition_effect", def));
+                    } catch (IllegalArgumentException iae) {
+                        // Continue
+                    }
+
+                    try {
+                        return Workspace.TransitionEffect.valueOf(def);
+                    } catch (IllegalArgumentException iae) {
+                        // Continue
+                    }
+
+                    return Workspace.TransitionEffect.Standard;
+                }
                 public static boolean getScrollWallpaper() {
                     return getBoolean("ui_homescreen_scrolling_scroll_wallpaper", true);
                 }
@@ -125,7 +141,26 @@ public final class PreferencesProvider {
             public static String getHiddenApps() {
                 return getString("ui_drawer_hidden_apps", "");
             }
-            public static class Scrolling {
+        public static class Scrolling {
+                public static AppsCustomizePagedView.TransitionEffect getTransitionEffect(String def) {
+                    try {
+                        return AppsCustomizePagedView.TransitionEffect.valueOf(
+                                getString("ui_drawer_scrolling_transition_effect", def));
+                    } catch (IllegalArgumentException iae) {
+                        // Continue
+                    }
+
+                    try {
+                        return AppsCustomizePagedView.TransitionEffect.valueOf(def);
+                    } catch (IllegalArgumentException iae) {
+                        // Continue
+                    }
+
+                    return AppsCustomizePagedView.TransitionEffect.Standard;
+                }
+                public static boolean getFadeInAdjacentScreens() {
+                    return getBoolean("ui_drawer_scrolling_fade_adjacent_screens", false);
+                }
             }
             public static class Indicator {
                 public static boolean getShowScrollingIndicator() {

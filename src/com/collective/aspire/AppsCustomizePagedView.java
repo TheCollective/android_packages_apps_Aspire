@@ -59,6 +59,7 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.collective.aspire.R;
 import com.collective.aspire.DropTarget.DragObject;
 import com.collective.aspire.preference.PreferencesProvider;
 
@@ -224,7 +225,7 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         View.OnClickListener, View.OnKeyListener, DragSource,
         PagedViewIcon.PressedCallback, PagedViewWidget.ShortPressListener,
         LauncherTransitionable {
-    private static final String TAG = "Trebuchet.AppsCustomizePagedView";
+    static final String TAG = "AppsCustomizePagedView";
 
     /**
      * The different content types that this paged view can show.
@@ -309,7 +310,7 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         CubeIn,
         CubeOut,
         Stack,
-        Accordian,
+        Accordion,
         CylinderIn,
         CylinderOut
     }
@@ -382,6 +383,8 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
         // Preferences
         mJoinWidgetsApps = PreferencesProvider.Interface.Drawer.getJoinWidgetsApps();
         mVertical = PreferencesProvider.Interface.Drawer.getVertical();
+        mTransitionEffect = PreferencesProvider.Interface.Drawer.Scrolling.getTransitionEffect(
+                resources.getString(R.string.config_drawerDefaultTransitionEffect));
         boolean showScrollingIndicator = PreferencesProvider.Interface.Drawer.Indicator.getShowScrollingIndicator();
         mScrollingIndicatorPosition = PreferencesProvider.Interface.Drawer.Indicator.getScrollingIndicatorPosition();
 
@@ -1967,7 +1970,7 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
     }
 
 
-    private void screenScrolledAccordian(int screenScroll) {
+    private void screenScrolledAccordion(int screenScroll) {
         for (int i = 0; i < getChildCount(); i++) {
             View v = getPageAt(i);
             if (v != null) {
@@ -2142,8 +2145,8 @@ public class AppsCustomizePagedView extends PagedViewWithDraggableItems implemen
                 case Stack:
                     screenScrolledStack(scroll);
                     break;
-                case Accordian:
-                    screenScrolledAccordian(scroll);
+                case Accordion:
+                    screenScrolledAccordion(scroll);
                     break;
                 case CylinderIn:
                     screenScrolledCylinder(scroll, true);

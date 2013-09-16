@@ -161,6 +161,8 @@ public class Workspace extends PagedView
     private SpringLoadedDragController mSpringLoadedDragController;
     private float mSpringLoadedShrinkFactor;
 
+    private static final int DEFAULT_HOMESCREEN = 2;
+
     private static final int DEFAULT_CELL_COUNT_X = 4;
     private static final int DEFAULT_CELL_COUNT_Y = 4;
 
@@ -283,7 +285,7 @@ public class Workspace extends PagedView
         CubeIn,
         CubeOut,
         Stack,
-        Accordian,
+        Accordion,
         CylinderIn,
         CylinderOut
     }
@@ -381,7 +383,7 @@ public class Workspace extends PagedView
 
         // Preferences
         mNumberHomescreens = PreferencesProvider.Interface.Homescreen.getNumberHomescreens();
-        mDefaultHomescreen = PreferencesProvider.Interface.Homescreen.getDefaultHomescreen(mNumberHomescreens / 2);
+        mDefaultHomescreen = PreferencesProvider.Interface.Homescreen.getDefaultHomescreen(DEFAULT_HOMESCREEN);
         if (mDefaultHomescreen >= mNumberHomescreens) {
             mDefaultHomescreen = mNumberHomescreens / 2;
         }
@@ -390,6 +392,8 @@ public class Workspace extends PagedView
         mShowSearchBar = PreferencesProvider.Interface.Homescreen.getShowSearchBar();
         mShowHotseat = PreferencesProvider.Interface.Dock.getShowDock();
         mHideIconLabels = PreferencesProvider.Interface.Homescreen.getHideIconLabels();
+        mTransitionEffect = PreferencesProvider.Interface.Homescreen.Scrolling.getTransitionEffect(
+                res.getString(R.string.config_workspaceDefaultTransitionEffect));
         mScrollWallpaper = PreferencesProvider.Interface.Homescreen.Scrolling.getScrollWallpaper();
         mWallpaperHack = PreferencesProvider.Interface.Homescreen.Scrolling.getWallpaperHack(
                 res.getBoolean(R.bool.config_workspaceDefaultWallpaperHack));
@@ -1541,7 +1545,7 @@ public class Workspace extends PagedView
         invalidate();
     }
 
-    private void screenScrolledAccordian(int screenScroll) {
+    private void screenScrolledAccordion(int screenScroll) {
         for (int i = 0; i < getChildCount(); i++) {
             CellLayout cl = (CellLayout) getPageAt(i);
             if (cl != null) {
@@ -1696,8 +1700,8 @@ public class Workspace extends PagedView
                     case Stack:
                         screenScrolledStack(scroll);
                         break;
-                    case Accordian:
-                        screenScrolledAccordian(scroll);
+                    case Accordion:
+                        screenScrolledAccordion(scroll);
                         break;
                     case CylinderIn:
                         screenScrolledCylinder(scroll, true);
@@ -2209,8 +2213,8 @@ public class Workspace extends PagedView
                 }
             }
 
-            // Accordian Effect
-            if (mTransitionEffect == TransitionEffect.Accordian) {
+            // Accordion Effect
+            if (mTransitionEffect == TransitionEffect.Accordion) {
                 if (stateIsSpringLoaded) {
                     cl.setVisibility(VISIBLE);
                 } else if (stateIsNormal) {
