@@ -319,12 +319,19 @@ public abstract class PagedView extends ViewGroup implements ViewGroup.OnHierarc
      * the previous tab page.
      */
     protected void updateCurrentPageScroll() {
-        int newXY = getChildOffset(mCurrentPage) - getRelativeChildOffset(mCurrentPage);
-        scrollTo(!mVertical ? newXY : 0, mVertical ? newXY : 0);
+        // If the current page is invalid, just reset the scroll position to zero
+        int newScrollPos = 0;
+        if (0 <= mCurrentPage && mCurrentPage < getPageCount()) {
+            int offset = getChildOffset(mCurrentPage);
+            int relOffset = getRelativeChildOffset(mCurrentPage);
+            newScrollPos = offset - relOffset;
+        }
         if (!mVertical) {
-            mScroller.setFinalX(newXY);
+            scrollTo(newScrollPos, 0);
+            mScroller.setFinalX(newScrollPos);
         } else {
-            mScroller.setFinalY(newXY);
+            scrollTo(0, newScrollPos);
+            mScroller.setFinalY(newScrollPos);
         }
         mScroller.forceFinished(true);
     }
