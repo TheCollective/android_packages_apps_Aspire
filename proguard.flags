@@ -1,4 +1,4 @@
--keep class com.collective.aspire.Launcher {
+-keep class com.android.aspire.Launcher {
   public void previousScreen(android.view.View);
   public void nextScreen(android.view.View);
   public void launchHotSeat(android.view.View);
@@ -7,24 +7,17 @@
   public void onClickConfigureButton(android.view.View);
   public void onClickAllAppsButton(android.view.View);
   public void onClickAppMarketButton(android.view.View);
-  public void onClickOverflowMenuButton(android.view.View);
+  public void dismissFirstRunCling(android.view.View);
   public void dismissWorkspaceCling(android.view.View);
   public void dismissAllAppsCling(android.view.View);
-  public void dismissAllAppsSortCling(android.view.View);
 }
 
--keep class com.collective.aspire.CellLayout {
+-keep class com.android.aspire.CellLayout {
   public float getBackgroundAlpha();
   public void setBackgroundAlpha(float);
-  public float getDimmableProgress();
-  public void setDimmableProgress(float);
-  public float getHoverScale();
-  public void setHoverScale(float);
-  public float getHoverAlpha();
-  public void setHoverAlpha(float);
 }
 
--keep class com.collective.aspire.DragLayer$LayoutParams {
+-keep class com.android.aspire.DragLayer$LayoutParams {
   public void setWidth(int);
   public int getWidth();
   public void setHeight(int);
@@ -35,7 +28,7 @@
   public int getY();
 }
 
--keep class com.collective.aspire.CellLayout$LayoutParams {
+-keep class com.android.aspire.CellLayout$LayoutParams {
   public void setWidth(int);
   public int getWidth();
   public void setHeight(int);
@@ -46,15 +39,13 @@
   public int getY();
 }
 
--keep class com.collective.aspire.Workspace {
+-keep class com.android.aspire.Workspace {
   public float getBackgroundAlpha();
   public void setBackgroundAlpha(float);
   public float getChildrenOutlineAlpha();
   public void setChildrenOutlineAlpha(float);
-  public void setVerticalWallpaperOffset(float);
-  public float getVerticalWallpaperOffset();
-  public void setHorizontalWallpaperOffset(float);
-  public float getHorizontalWallpaperOffset();
 }
 
--keep class com.collective.aspire.preference.Preferences$*Fragment
+-keep class com.android.aspire.MemoryDumpActivity {
+  *;
+}

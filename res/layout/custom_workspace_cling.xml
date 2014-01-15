@@ -14,9 +14,9 @@
      limitations under the License.
 -->
 <!-- dummy layout, to be replaced in overlays -->
-<com.collective.aspire.Cling
+<com.android.aspire.Cling
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:launcher="http://schemas.android.com/apk/res/com.collective.aspire"
+    xmlns:launcher="http://schemas.android.com/apk/res-auto/com.android.aspire"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     launcher:drawIdentifier="workspace_custom">
@@ -27,6 +27,6 @@
         android:textColor="@android:color/holo_blue_light"
         android:text="@string/dummy_custom_cling_error_message"
         android:gravity="start"
-        android:layout_gravity="bottom|left"
+        android:layout_gravity="bottom|start"
     />
-</com.collective.aspire.Cling>
+</com.android.aspire.Cling>

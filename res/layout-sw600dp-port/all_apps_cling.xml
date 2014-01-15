@@ -13,9 +13,9 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<com.collective.aspire.Cling
+<com.android.aspire.Cling
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:launcher="http://schemas.android.com/apk/res/com.collective.aspire"
+    xmlns:launcher="http://schemas.android.com/apk/res-auto/com.android.aspire"
     launcher:drawIdentifier="all_apps_portrait">
     <FrameLayout
         android:layout_width="match_parent"
@@ -45,6 +45,6 @@
         android:textSize="24sp"
         android:layout_marginTop="235dp"
         android:layout_marginEnd="36dp"
-        android:layout_gravity="top|right"
+        android:layout_gravity="top|end"
         android:onClick="dismissAllAppsCling" />
-</com.collective.aspire.Cling>
+</com.android.aspire.Cling>

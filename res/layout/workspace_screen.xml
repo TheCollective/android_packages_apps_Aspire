@@ -14,20 +14,12 @@
      limitations under the License.
 -->
 
-<com.collective.aspire.CellLayout
+<com.android.aspire.CellLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:launcher="http://schemas.android.com/apk/res/com.collective.aspire"
+    xmlns:launcher="http://schemas.android.com/apk/res-auto/com.android.aspire"
 
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:paddingStart="@dimen/cell_layout_left_padding"
-    android:paddingEnd="@dimen/cell_layout_right_padding"
-    android:paddingTop="@dimen/cell_layout_top_padding"
-    android:paddingBottom="@dimen/cell_layout_bottom_padding"
     android:hapticFeedbackEnabled="false"
 
-    launcher:cellWidth="@dimen/workspace_cell_width"
-    launcher:cellHeight="@dimen/workspace_cell_height"
-    launcher:widthGap="@dimen/workspace_width_gap"
-    launcher:heightGap="@dimen/workspace_height_gap"
     launcher:maxGap="@dimen/workspace_max_gap" />

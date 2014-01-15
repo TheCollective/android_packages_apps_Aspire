@@ -13,9 +13,9 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<com.collective.aspire.PagedViewWidget
+<com.android.aspire.PagedViewWidget
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:launcher="http://schemas.android.com/apk/res/com.collective.aspire"
+    xmlns:launcher="http://schemas.android.com/apk/res-auto/com.android.aspire"
 
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -26,7 +26,7 @@
     android:focusable="true">
 
     <!-- The preview of the widget or shortcut. -->
-    <com.collective.aspire.PagedViewWidgetImageView
+    <com.android.aspire.PagedViewWidgetImageView
         android:id="@+id/widget_preview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,8 +35,7 @@
         android:paddingStart="@dimen/app_widget_preview_padding_left"
         android:paddingEnd="@dimen/app_widget_preview_padding_right"
         android:scaleType="matrix"
-        android:background="@drawable/widget_container_holo" />
-
+        android:background="@drawable/screenpanel" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -56,7 +55,11 @@
             android:fadingEdge="horizontal"
 
             android:textColor="#FFFFFFFF"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textAlignment="viewStart"
+            android:fontFamily="sans-serif-condensed"
+            android:shadowRadius="2.0"
+            android:shadowColor="#B0000000" />
 
         <!-- The original dimensions of the widget (can't be the same text as above due to different
              style. -->
@@ -69,9 +72,12 @@
             android:layout_weight="0"
             android:gravity="start"
 
-            android:textColor="#FF555555"
-            android:textSize="12sp" />
+            android:textColor="#FFAAAAAA"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-condensed"
+            android:shadowRadius="2.0"
+            android:shadowColor="#B0000000" />
     </LinearLayout>
 
 
-</com.collective.aspire.PagedViewWidget>
+</com.android.aspire.PagedViewWidget>
