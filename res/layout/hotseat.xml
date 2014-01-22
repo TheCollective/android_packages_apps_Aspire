@@ -13,12 +13,7 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<com.android.aspire.Hotseat
+<com.collective.aspire.Hotseat
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:launcher="http://schemas.android.com/apk/res-auto/com.android.aspire">
-    <com.android.aspire.CellLayout
-        android:id="@+id/layout"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="center" />
-</com.android.aspire.Hotseat>
+    xmlns:launcher="http://schemas.android.com/apk/res/com.collective.aspire"
+    launcher:cellCount="@integer/hotseat_cell_count" />

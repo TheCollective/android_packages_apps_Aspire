@@ -17,6 +17,15 @@
 -->
 
 <resources>
+    <!-- Orientation of a widget. -->
+    <attr name="direction">
+        <!-- Vertical widget. -->
+        <enum name="vertical" value="0" />
+        <!-- Horizontal widget. -->
+        <enum name="horizontal" value="1" />
+    </attr>
+
+    <skip />
 
     <!-- DrawableStateProxyView specific attributes. These attributes are used to customize
          a DrawableStateProxyView view in XML files. -->
@@ -32,18 +41,9 @@
         <attr name="drawIdentifier" format="string"  />
     </declare-styleable>
 
-    <!-- Page Indicator specific attributes. These attributes are used to customize
-         the cling in XML files. -->
-    <declare-styleable name="PageIndicator">
-        <!-- Used to identify how to draw the cling bg -->
-        <attr name="windowSize" format="integer"  />
-    </declare-styleable>
-
     <!-- Workspace specific attributes. These attributes are used to customize
          the workspace in XML files. -->
     <declare-styleable name="Workspace">
-        <!-- The first screen the workspace should display. -->
-        <attr name="defaultScreen" format="integer"  />
         <!-- The number of horizontal cells in the CellLayout -->
         <attr name="cellCountX" format="integer"  />
         <!-- The number of vertical cells in the CellLayout -->
@@ -53,10 +53,8 @@
     <!-- Hotseat specific attributes. These attributes are used to customize
          the hotseat in XML files. -->
     <declare-styleable name="Hotseat">
-        <!-- The number of horizontal cells in the CellLayout -->
-        <attr name="cellCountX" />
-        <!-- The number of vertical cells in the CellLayout -->
-        <attr name="cellCountY" />
+        <!-- The number of cells in the CellLayout -->
+        <attr name="cellCount" format="integer"  />
     </declare-styleable>
 
     <!-- CellLayout specific attributes. These attributes are used to customize
@@ -89,7 +87,6 @@
     <declare-styleable name="HolographicLinearLayout">
         <!-- The source view to generate and apply the drawable states to/from -->
         <attr name="sourceImageViewId" format="integer" />
-        <attr name="stateHotwordOn" format="boolean" />
     </declare-styleable>
 
     <!-- PagedView specific attributes. These attributes are used to customize
@@ -105,8 +102,11 @@
         <attr name="pageLayoutPaddingRight" format="dimension" />
         <!-- The space between adjacent pages of the PagedView. -->
         <attr name="pageSpacing" format="dimension" />
-        <!-- The page indicator for this workspace -->
-        <attr name="pageIndicator" format="reference" />
+        <!-- The padding for the scroll indicator area -->
+        <attr name="scrollIndicatorPaddingLeft" format="dimension" />
+        <attr name="scrollIndicatorPaddingTop" format="dimension" />
+        <attr name="scrollIndicatorPaddingRight" format="dimension" />
+        <attr name="scrollIndicatorPaddingBottom" format="dimension" />
     </declare-styleable>
 
     <!-- AppsCustomizePagedView specific attributes.  These attributes are used to
@@ -148,9 +148,6 @@
         <attr name="key" format="string" />
         <attr name="value" format="string" />
     </declare-styleable>
-    <declare-styleable name="Include">
-        <attr name="workspace" format="reference" />
-    </declare-styleable>
 
     <!-- Only used in the device overlays -->
     <declare-styleable name="CustomClingTitleText">
@@ -158,8 +155,45 @@
     <declare-styleable name="CustomClingText">
     </declare-styleable>
 
-    <declare-styleable name="NumberPreference">
-        <attr name="min" format="integer"></attr>
-        <attr name="max" format="integer"></attr>
+    <declare-styleable name="NumberPickerPreference">
+        <attr name="max" format="integer" />
+        <attr name="min" format="integer" />
+        <attr name="maxExternal" format="string" />
+        <attr name="minExternal" format="string" />
     </declare-styleable>
+
+    <declare-styleable name="DoubleNumberPickerPreference">
+        <attr name="defaultValue1" format="integer" />
+        <attr name="defaultValue2" format="integer" />
+        <attr name="max1" format="integer" />
+        <attr name="min1" format="integer" />
+        <attr name="max2" format="integer" />
+        <attr name="min2" format="integer" />
+        <attr name="maxExternal1" format="string" />
+        <attr name="minExternal1" format="string" />
+        <attr name="maxExternal2" format="string" />
+        <attr name="minExternal2" format="string" />
+        <attr name="pickerTitle1" format="string" />
+        <attr name="pickerTitle2" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="SeekBarDialogPreference">
+        <attr name="max" />
+        <attr name="min" />
+        <attr name="prefix" format="string" />
+        <attr name="suffix" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="EcoGallery">
+        <attr name="gravity" format="integer" />
+        <attr name="animationDuration" format="integer" />
+        <attr name="unselectedAlpha" format="float" />
+        <attr name="spacing" format="dimension" />
+    </declare-styleable>
+    <attr name="ecoGalleryStyle" format="reference" />
+
+    <declare-styleable name="CustomAbsSpinner">
+        <attr name="entries" format="reference" />
+    </declare-styleable>
+    <attr name="customAbsSpinnerStyle" format="reference" />
 </resources>
