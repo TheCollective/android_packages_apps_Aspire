@@ -150,8 +150,8 @@
         <provider
             android:name="com.collective.aspire.LauncherProvider"
             android:authorities="com.collective.aspire.settings"
-            android:writePermission="com.android.launcher.permission.WRITE_SETTINGS"
             android:exported="true"
+            android:writePermission="com.android.launcher.permission.WRITE_SETTINGS"
             android:readPermission="com.android.launcher.permission.READ_SETTINGS" />
 
         <meta-data android:name="android.nfc.disable_beam_default"
